@@ -1,0 +1,4 @@
+[package]
+name = "gosh"
+version = "0.1.0"
+authors = ["vilhalmer <vil@vil.lv>"]
