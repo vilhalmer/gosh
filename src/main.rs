@@ -2,6 +2,8 @@ extern crate term;
 use std::io::prelude::*;
 use std::io;
 
+mod parser;
+
 fn main() {
     let mut t = term::stdout().unwrap();
 
@@ -13,13 +15,11 @@ fn main() {
         write!(t, ">> ").unwrap();
         t.flush().unwrap();
 
-        let mut phrase = String::new();
-        io::stdin().read_line(&mut phrase).ok().expect("Failed to read phrase.");
+        let mut stanza = String::new();
+        io::stdin().read_line(&mut stanza).ok().expect("Failed to read phrase.");
 
-        let phrase = phrase; // No longer mutable.
+        parser::parse(&stanza);
 
-        let words: Vec<&str> = phrase.split_whitespace().collect();
-
-        writeln!(t, "{:?}", words).unwrap();
+        writeln!(t, "{:?}", stanza).unwrap();
     }
 }
