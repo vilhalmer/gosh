@@ -27,6 +27,7 @@ pub fn parse(stanza_text: &str) {
         match bit {
             ":" => {
                 // A colon indicates that the next_bit we just recorded is in fact a parameter-name.
+
                 // Go ahead and push the token into the collection, it was complete after all. Cut
                 // off any extraneous spaces that we pushed, as well.
                 stanza.tokens.push(token.trim().to_owned());
@@ -37,6 +38,17 @@ pub fn parse(stanza_text: &str) {
                 // tokens vector without releasing our local borrow is impossible. However, once we
                 // reassign it to be a new string below, everything is fine.
 
+                next_bit = String::new();
+                token = String::new();
+            },
+
+            "," => {
+                // A comma indicates that we've moved on to the next item in a list.
+                // Push the current thing into the tokens and clear next_bit.
+
+                token.push_str(&*next_bit);
+                stanza.tokens.push(token.trim().to_owned());
+                token = String::new();
                 next_bit = String::new();
             },
 
@@ -51,6 +63,14 @@ pub fn parse(stanza_text: &str) {
                 // Other single-character bits need to be glommed back on to the thing they used to
                 // be next to as well.
                 next_bit.push_str(bit);
+            },
+
+            "\n" => {
+                // End of stanza. Probably.
+
+                token.push_str(&*next_bit);
+                stanza.tokens.push(token.trim().to_owned());
+                next_bit = String::new();
             },
 
             _ => {
