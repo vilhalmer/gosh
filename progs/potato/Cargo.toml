@@ -2,3 +2,6 @@
 name = "potato"
 version = "0.1.0"
 authors = ["Kaylee Edwards <kayleee@mtu.edu>"]
+
+[dependencies]
+rand = "0.3"
