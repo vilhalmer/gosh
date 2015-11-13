@@ -32,7 +32,7 @@ impl Stanza {
 pub fn parse(stanza_text: &str) -> ParserResult {
     let mut stanza = Stanza::new();
 
-    let mut current_parameter_name = String::new();
+    let mut current_parameter_name = String::from("<executable>");
 
     let mut token = String::new();
     let mut next_bit = String::new();
@@ -72,21 +72,21 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
             "," => {
                 // A comma indicates that we've moved on to the next item in a list.
-                // Push the current thing into the current_tokens and clear next_bit.
 
                 token.push_str(&*next_bit);
 
-                let mut current_parameter = stanza.parameters.get_mut(&current_parameter_name).unwrap();
+                if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
+                    if !token.trim().is_empty() {
+                        current_parameter.push(token.trim().to_owned());
+                    }
 
-                match current_parameter.last_mut() {
-                    Some(item) => item.push_str(&*token.trim()),
-
-                    None => return Err(ParserError::SyntaxError(format!("{}: list is missing first item.", &*current_parameter_name))),
+                    if current_parameter.is_empty() {
+                        return Err(ParserError::SyntaxError(format!("{}: list is missing first item.", &*current_parameter_name)))
+                    }
                 }
-
-                // There will be another item, make it now so tokens can be added to it:
-                // (Yes, this is silly. It also makes things a lot easier.)
-                current_parameter.push(String::new());
+                else {
+                    return Err(ParserError::InternalError(format!("Parameter ({}) was never added to map.", current_parameter_name)));
+                }
 
                 token = String::new();
                 next_bit = String::new();
