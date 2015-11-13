@@ -85,7 +85,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
                 }
                 else {
-                    return Err(ParserError::InternalError(format!("Parameter ({}) was never added to map.", current_parameter_name)));
+                    return Err(ParserError::SyntaxError(format!("Lists are not allowed outside of parameters.")));
                 }
 
                 token = String::new();
