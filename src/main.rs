@@ -21,9 +21,10 @@ fn main() {
 
         let stanza: ParserResult = parser::parse(&stanza);
 
-        match stanza {
-            Ok(result) => writeln!(t, "{:?}", result),
-            Err(error) => writeln!(t, "{}", error),
+        if let Err(error) = stanza {
+            t.fg(term::color::RED).unwrap();
+            writeln!(t, "{}", error).unwrap();
+            t.reset().unwrap();
         };
     }
 }
