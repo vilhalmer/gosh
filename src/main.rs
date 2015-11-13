@@ -18,7 +18,7 @@ fn main() {
         let mut stanza = String::new();
         io::stdin().read_line(&mut stanza).ok().expect("Failed to read phrase.");
 
-        parser::parse(&stanza);
+        let stanza = parser::parse(&stanza);
 
         writeln!(t, "{:?}", stanza).unwrap();
     }
