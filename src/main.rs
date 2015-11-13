@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::io;
 
 mod parser;
+use parser::{ParserResult, ParserError};
 
 fn main() {
     let mut t = term::stdout().unwrap();
@@ -18,8 +19,11 @@ fn main() {
         let mut stanza = String::new();
         io::stdin().read_line(&mut stanza).ok().expect("Failed to read phrase.");
 
-        let stanza = parser::parse(&stanza);
+        let stanza: ParserResult = parser::parse(&stanza);
 
-        writeln!(t, "{:?}", stanza).unwrap();
+        match stanza {
+            Ok(result) => writeln!(t, "{:?}", result),
+            Err(error) => writeln!(t, "{}", error),
+        };
     }
 }

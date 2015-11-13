@@ -9,9 +9,29 @@ use std::collections::HashMap;
 pub type ParserResult = Result<Stanza, ParserError>;
 
 #[derive(Debug)]
-pub enum ParserError {
-    InternalError(String),
-    SyntaxError(String),
+pub struct ParserError {
+    kind: ParserErrorKind,
+    message: String,
+}
+
+#[derive(Debug)]
+pub enum ParserErrorKind {
+    InternalError,
+    SyntaxError,
+}
+
+use std::fmt;
+use self::ParserErrorKind::*;
+
+impl fmt::Display for ParserError {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        let kind = match self.kind {
+            InternalError => "Internal parser error",
+            SyntaxError => "Syntax error",
+        };
+
+        write!(formatter, "{}: {}", kind, self.message)
+    }
 }
 
 #[derive(Debug)]
@@ -50,7 +70,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
 
                     if current_parameter.is_empty() {
-                        return Err(ParserError::SyntaxError(format!("{}: ?", &*current_parameter_name)));
+                        return Err(ParserError { kind: SyntaxError, message: format!("{}: ?", &*current_parameter_name) });
                     }
 
                 }
@@ -59,7 +79,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                         stanza.executable = token.trim().to_owned();
                     }
                     else {
-                        return Err(ParserError::InternalError(format!("Parameter ({}) was never added to map.", current_parameter_name)));
+                        return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
                     }
                 }
 
@@ -81,11 +101,11 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
 
                     if current_parameter.is_empty() {
-                        return Err(ParserError::SyntaxError(format!("{}: list is missing first item.", &*current_parameter_name)))
+                        return Err(ParserError { kind: SyntaxError, message: format!("{}: list is missing first item.", &*current_parameter_name) });
                     }
                 }
                 else {
-                    return Err(ParserError::SyntaxError(format!("Lists are not allowed outside of parameters.")));
+                    return Err(ParserError { kind: SyntaxError, message: format!("Lists are not allowed outside of parameters.") });
                 }
 
                 token = String::new();
@@ -117,12 +137,12 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
 
                     if current_parameter.is_empty() {
-                        return Err(ParserError::SyntaxError(format!("{}: ?", &*current_parameter_name)));
+                        return Err(ParserError { kind: SyntaxError, message: format!("{}: ?", &*current_parameter_name) });
                     }
 
                 }
                 else {
-                    return Err(ParserError::InternalError(format!("Parameter ({}) was never added to map.", current_parameter_name)));
+                    return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
                 }
 
                 next_bit = String::new();
