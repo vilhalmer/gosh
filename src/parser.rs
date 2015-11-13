@@ -45,7 +45,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                 // A colon indicates that the next_bit we just recorded is in fact a parameter-name.
 
                 if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
-                    if !token.is_empty() {
+                    if !token.trim().is_empty() {
                         current_parameter.push(token.trim().to_owned());
                     }
 
@@ -112,7 +112,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                 token.push_str(&*next_bit);
 
                 if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
-                    if !token.is_empty() {
+                    if !token.trim().is_empty() {
                         current_parameter.push(token.trim().to_owned());
                     }
 
