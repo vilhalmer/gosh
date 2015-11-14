@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["Bill Doyle <wrdoyle@mtu.edu>"]
 
 [dependencies]
-term = "0.2"
+ansi_term = "0.7.0"
 unicode-segmentation = "0.1.0"
 unicode-width = "0.1.3"
