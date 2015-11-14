@@ -57,9 +57,23 @@ pub fn parse(stanza_text: &str) -> ParserResult {
     let mut token = String::new();
     let mut next_bit = String::new();
 
-    for bit in stanza_text.split_word_bounds() {
-        //println!("bit: {:?}\nnext_bit: {:?}\ntoken: {:?}\n", bit, next_bit, token);
+    // This giant block of nonsense is here to work around the Swedish language. I am not joking.
+    let mut possible_tokens: Vec<&str> = Vec::new();
+    for possible_token in stanza_text.split_word_bounds() {
+        if possible_token.contains(":") && possible_token.len() > 1 {
+            let mut pieces: Vec<&str> = possible_token.split(':').collect();
+            pieces.insert(1, ":");
 
+            for piece in pieces {
+                possible_tokens.push(piece);
+            }
+        }
+        else {
+            possible_tokens.push(possible_token);
+        }
+    }
+
+    for bit in possible_tokens {
         match bit {
             ":" => {
                 // A colon indicates that the next_bit we just recorded is in fact a parameter-name.
