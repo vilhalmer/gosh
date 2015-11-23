@@ -5,6 +5,9 @@ extern crate ansi_term;
 use ansi_term::Colour::*;
 
 mod parser;
+mod environment;
+
+use environment::Environment;
 
 macro_rules! out {
     ($message:expr) => {{
@@ -14,16 +17,15 @@ macro_rules! out {
     }};
 
     ($style:expr, $message:expr) => (out!($style.paint($message)));
-
-    //($message:expr, $($params:expr),+) => (out!(format!($message, $($params),*)));
-
-    //($style:expr, $message:expr, $($params:expr),+) => (out!($style.paint(format!($message, $($params),*))));
 }
 
 fn main() {
     let debug = true;
 
     out!(Green.bold(), "Welcome to gosh!\n");
+
+    let root = Environment::from(std::env::vars());
+    out!(format!("{}", root));
 
     loop {
         out!(">> ");
