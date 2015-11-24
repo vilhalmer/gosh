@@ -105,7 +105,7 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
                 }
 
-                current_parameter_name = next_bit;
+                current_parameter_name = next_bit.trim().to_owned();
                 stanza.parameters.insert(current_parameter_name.clone(), Vec::new());
 
                 next_bit = String::new();
