@@ -140,14 +140,14 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
                 next_bit.push_str(bit);
             },
-
+/*
             _ if UnicodeWidthStr::width(bit) == 1 => {
                 // Other single-character bits need to be glommed back on to the thing they used to
                 // be next to as well.
 
                 next_bit.push_str(bit);
             },
-
+*/
             "\n" => {
                 // End of stanza. Probably.
 
@@ -164,7 +164,12 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
                 }
                 else {
-                    return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
+                    if stanza.executable.is_empty() {
+                        stanza.executable = token.trim().to_owned();
+                    }
+                    else {
+                        return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
+                    }
                 }
 
                 next_bit = String::new();
