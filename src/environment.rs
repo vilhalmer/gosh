@@ -21,9 +21,11 @@ impl Environment {
     }
 
     pub fn with_parent(parent: &Environment) -> Environment {
+        let parent = Box::new(parent.clone());
+
         Environment {
             id: parent.id.clone() + "_child",
-            parent: Some(Box::new(parent.clone())),
+            parent: Some(parent),
             variables: HashMap::new(),
         }
     }
