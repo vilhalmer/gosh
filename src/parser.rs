@@ -47,6 +47,14 @@ impl Stanza {
             parameters: HashMap::new(),
         }
     }
+
+    pub fn executable(&self) -> &String {
+        &self.executable
+    }
+
+    pub fn parameters(&self) -> &HashMap<String, Vec<String>> {
+        &self.parameters
+    }
 }
 
 pub fn parse(stanza_text: &str) -> ParserResult {

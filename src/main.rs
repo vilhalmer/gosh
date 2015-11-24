@@ -7,6 +7,7 @@ use ansi_term::Colour::*;
 mod parser;
 mod environment;
 
+use parser::Stanza;
 use environment::Environment;
 
 macro_rules! out {
@@ -24,8 +25,7 @@ fn main() {
 
     out!(Green.bold(), "Welcome to gosh!\n");
 
-    let root = Environment::from(std::env::vars());
-    out!(format!("{}", root));
+    let mut root_env = Environment::from(std::env::vars());
 
     loop {
         out!(">> ");
@@ -43,6 +43,26 @@ fn main() {
         };
 
         if debug { out!(format!("{:?}\n", stanza)); }
+
+        exec(stanza, &root_env);
     }
+}
+
+fn exec(stanza: Stanza, env: &Environment) {
+    let mut env = Environment::with_parent(env);
+
+    for (parameter, values) in stanza.parameters().iter() {
+        let mut list = String::new();
+        for value in values {
+            list.push_str(&*value);
+            list.push(',');
+        }
+
+        list.pop(); // Remove trailing comma
+
+        env.set(parameter.clone(), list);
+    }
+
+    println!("{}", env)
 }
 

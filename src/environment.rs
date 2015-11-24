@@ -5,6 +5,7 @@ pub type Envar = String;
 
 #[derive(Debug)]
 pub struct Environment {
+    id: String,
     parent: Option<Box<Environment>>,
     variables: HashMap<Envar, String>,
 }
@@ -13,14 +14,16 @@ pub struct Environment {
 impl Environment {
     pub fn new() -> Environment {
         Environment {
+            id: "root".to_string(),
             parent: None,
             variables: HashMap::new(),
         }
     }
 
-    pub fn with_parent(parent: Environment) -> Environment {
+    pub fn with_parent(parent: &Environment) -> Environment {
         Environment {
-            parent: Some(Box::new(parent)),
+            id: parent.id.clone() + "_child",
+            parent: Some(Box::new(parent.clone())),
             variables: HashMap::new(),
         }
     }
@@ -44,6 +47,16 @@ impl Environment {
 
 }
 
+impl Clone for Environment {
+    fn clone(&self) -> Self {
+        Environment {
+            id: self.id.clone() + "_clone",
+            parent: self.parent.clone(),
+            variables: self.variables.clone(),
+        }
+    }
+}
+
 impl From<Vars> for Environment {
     fn from(vars: Vars) -> Environment {
         let mut variables: HashMap<Envar, String> = HashMap::new();
@@ -52,6 +65,7 @@ impl From<Vars> for Environment {
         }
 
         Environment {
+            id: "system".to_string(),
             parent: None,
             variables: variables,
         }
@@ -61,7 +75,12 @@ impl From<Vars> for Environment {
 use std::fmt;
 impl fmt::Display for Environment {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(formatter, "{{\n"));
+        match self.parent {
+            Some(ref parent) => try!(write!(formatter, "{}\n", parent)),
+            None => (),
+        }
+
+        try!(write!(formatter, "{} {{\n", self.id));
 
         for (variable, value) in self.variables.iter() {
             try!(write!(formatter, "    {}: {}\n", variable, value));
