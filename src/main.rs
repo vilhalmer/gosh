@@ -1,6 +1,8 @@
 use std::io::prelude::*;
 use std::io;
 
+use std::process::Command;
+
 extern crate ansi_term;
 use ansi_term::Colour::*;
 
@@ -53,20 +55,34 @@ fn main() {
 fn exec(stanza: Stanza, env: &Environment) {
     let mut env = Environment::with_parent(env);
 
-    println!("{}", resolve(&stanza.executable(), &env).unwrap_or("<none>".to_string()));
+    resolve(stanza.executable(), &env).and_then(|executable| {
 
-    for (parameter, values) in stanza.parameters().iter() {
-        let mut list = String::new();
-        for value in values {
-            list.push_str(&*value);
-            list.push(',');
+        for (parameter, values) in stanza.parameters().iter() {
+            let mut list = String::new();
+            for value in values {
+                list.push_str(&*value);
+                list.push('\x1F'); // Unit separator
+            }
+
+            list.pop(); // Remove trailing US
+
+            env.set(&*parameter, list);
         }
 
-        list.pop(); // Remove trailing comma
+        let mut command = Command::new(executable.clone());
+        command.env_clear();
 
-        env.set(&*parameter, list);
-    }
+        for (var, val) in env.as_map().iter() {
+            command.env(&*var, &*val);
+        }
 
-    println!("{}", env)
+        match command.output() {
+            Ok(output) => out!(String::from_utf8(output.stdout).unwrap()),
+            Err(error) => out!(Red.bold(), format!("Error executing process {}: {}", executable, error)),
+        };
+
+        Some(executable)
+
+    }).or_else(|| { out!(Red, "gosh: Couldn't find that program, sorry!"); None });
 }
 

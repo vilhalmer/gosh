@@ -45,6 +45,19 @@ impl Environment {
         }
     }
 
+    pub fn as_map(&self) -> HashMap<String, String> {
+        let mut env_map = self.variables.clone();
+
+        if let Some(ref parent) = self.parent {
+            for (var, val) in parent.as_map() {
+                if env_map.contains_key(&var) { continue; }
+
+                env_map.insert(var, val);
+            }
+        }
+
+        env_map
+    }
 }
 
 impl Clone for Environment {
