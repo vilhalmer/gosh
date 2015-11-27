@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 use std::env::Vars;
 
-pub type Envar = String;
-
 #[derive(Debug)]
 pub struct Environment {
     id: String,
     parent: Option<Box<Environment>>,
-    variables: HashMap<Envar, String>,
+    variables: HashMap<String, String>,
 }
 
 #[allow(dead_code)]
@@ -36,12 +34,12 @@ impl Environment {
 
 // Variables //
 
-    pub fn set(&mut self, variable: Envar, value: String) {
-        self.variables.insert(variable, value);
+    pub fn set(&mut self, variable: &str, value: String) {
+        self.variables.insert(variable.to_owned(), value);
     }
 
-    pub fn get(&self, variable: &Envar) -> Option<&String> {
-        match self.variables.get(variable) {
+    pub fn get(&self, variable: &str) -> Option<&String> {
+        match self.variables.get(&variable.to_owned()) {
             None    => self.parent.as_ref().map_or(None, |p| p.get(variable)),
             Some(v) => Some(v),
         }
@@ -61,7 +59,7 @@ impl Clone for Environment {
 
 impl From<Vars> for Environment {
     fn from(vars: Vars) -> Environment {
-        let mut variables: HashMap<Envar, String> = HashMap::new();
+        let mut variables: HashMap<String, String> = HashMap::new();
         for (variable, value) in vars {
             variables.insert(variable, value);
         }

@@ -6,9 +6,11 @@ use ansi_term::Colour::*;
 
 mod parser;
 mod environment;
+mod filesystem;
 
 use parser::Stanza;
 use environment::Environment;
+use filesystem::resolve;
 
 macro_rules! out {
     ($message:expr) => {{
@@ -51,6 +53,8 @@ fn main() {
 fn exec(stanza: Stanza, env: &Environment) {
     let mut env = Environment::with_parent(env);
 
+    println!("{}", resolve(&stanza.executable(), &env).unwrap_or("<none>".to_string()));
+
     for (parameter, values) in stanza.parameters().iter() {
         let mut list = String::new();
         for value in values {
@@ -60,7 +64,7 @@ fn exec(stanza: Stanza, env: &Environment) {
 
         list.pop(); // Remove trailing comma
 
-        env.set(parameter.clone(), list);
+        env.set(&*parameter, list);
     }
 
     println!("{}", env)
