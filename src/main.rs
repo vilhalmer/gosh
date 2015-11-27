@@ -45,7 +45,7 @@ fn main() {
     }).unwrap_or("gosh".to_string()));
 
     loop {
-        out!(">> ");
+        out!(Blue.bold(), ">> ");
 
         let mut stanza = String::new();
         io::stdin().read_line(&mut stanza).ok().expect("Failed to read phrase.");

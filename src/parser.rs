@@ -1,8 +1,6 @@
 extern crate unicode_segmentation;
 extern crate unicode_width;
-
 use self::unicode_segmentation::UnicodeSegmentation;
-use self::unicode_width::UnicodeWidthStr;
 
 use std::collections::HashMap;
 
