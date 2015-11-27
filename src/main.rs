@@ -1,5 +1,7 @@
 use std::io::prelude::*;
 use std::io;
+use std::env;
+use std::path::PathBuf;
 
 use std::process::Command;
 
@@ -30,6 +32,17 @@ fn main() {
     out!(Green.bold(), "Welcome to gosh!\n");
 
     let mut root_env = Environment::from(std::env::vars());
+    root_env.set("SHELL", env::args().nth(0).and_then(|path| {
+
+        let mut path = PathBuf::from(&path);
+
+        if path.is_relative() {
+            path = env::current_dir().unwrap().join(&path) // If we can't read the current directory, might as well crash sooner rather than later.
+        }
+
+        path.to_str().map(|p| p.to_string())
+
+    }).unwrap_or("gosh".to_string()));
 
     loop {
         out!(">> ");
