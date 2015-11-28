@@ -1,5 +1,7 @@
 use std::io;
 use std::path::PathBuf;
+use std::process;
+use std::str::FromStr;
 use environment::Environment;
 
 extern crate ansi_term;
@@ -8,6 +10,7 @@ use ansi_term::Colour::*;
 pub fn look_up(builtin: &str) -> Option<fn(&Environment) -> i32> {
     match builtin {
         "change directory" | "cd" => Some(cd),
+        "exit" => Some(exit),
         _ => None,
     }
 }
@@ -34,4 +37,13 @@ pub fn cd(env: &Environment) -> i32 {
             1
         }
     }
+}
+
+pub fn exit(env: &Environment) -> i32 {
+    let code = match env.get_local("code") {
+        Some(code) => i32::from_str(code).unwrap_or(0),
+        None => 0
+    };
+
+    process::exit(code);
 }
