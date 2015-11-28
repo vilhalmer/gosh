@@ -3,7 +3,8 @@ use std::io;
 use std::env;
 use std::path::PathBuf;
 
-use std::process::Command;
+use std::process::{Command, Stdio};
+use std::thread;
 
 extern crate ansi_term;
 use ansi_term::Colour::*;
@@ -59,7 +60,7 @@ fn main() {
             Ok(stanza) => stanza,
         };
 
-        if debug { out!(format!("{:?}\n", stanza)); }
+        if debug { out!(Black.bold(), format!("{:?}\n", stanza)); }
 
         exec(stanza, &root_env);
     }
@@ -89,13 +90,21 @@ fn exec(stanza: Stanza, env: &Environment) {
             command.env(&*var, &*val);
         }
 
-        match command.output() {
-            Ok(output) => out!(String::from_utf8(output.stdout).unwrap()),
-            Err(error) => out!(Red.bold(), format!("Error executing process {}: {}", executable, error)),
+        let mut process = match command.spawn() {
+            Ok(process) => process,
+            Err(error) => {
+                out!(Red, format!("gosh: Couldn't execute process: {:?}", error));
+                return Some(executable);
+            },
         };
+
+        match process.wait().unwrap().code() { // TODO: returns None on signal death. Use unix extensions to elaborate.
+            Some(exit_code) => out!(Green, format!("gosh: Process exited with {}\n", exit_code)),
+            None => out!(Red, "gosh: Process killed by signal.\n"),
+        }
 
         Some(executable)
 
-    }).or_else(|| { out!(Red, "gosh: Couldn't find that program, sorry!"); None });
+    }).or_else(|| { out!(Red, "gosh: Couldn't find that program, sorry!\n"); None });
 }
 
