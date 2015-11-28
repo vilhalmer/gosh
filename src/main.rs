@@ -45,6 +45,8 @@ fn main() {
 
     }).unwrap_or("gosh".to_string()));
 
+    out!(Green, " :) ");
+
     loop {
         out!(Blue.bold(), ">> ");
 
@@ -62,49 +64,57 @@ fn main() {
 
         if debug { out!(Black.bold(), format!("{:?}\n", stanza)); }
 
-        exec(stanza, &root_env);
+        match exec(stanza, &root_env) {
+            0 => out!(Green, format!(" :) ")),
+            exit_code @ _ => out!(Red, format!("{:3} ", exit_code)),
+        }
     }
 }
 
-fn exec(stanza: Stanza, env: &Environment) {
+fn exec(stanza: Stanza, env: &Environment) -> i32 {
     let mut env = Environment::with_parent(env);
 
-    resolve(stanza.executable(), &env).and_then(|executable| {
+    let executable = match resolve(stanza.executable(), &env) {
+        Some(e) => e,
+        None => {
+            out!(Red, "gosh: Couldn't find that program, sorry!\n");
+            return 127;
+        }
+    };
 
-        for (parameter, values) in stanza.parameters().iter() {
-            let mut list = String::new();
-            for value in values {
-                list.push_str(&*value);
-                list.push('\x1F'); // Unit separator
-            }
-
-            list.pop(); // Remove trailing US
-
-            env.set(&*parameter, list);
+    for (parameter, values) in stanza.parameters().iter() {
+        let mut list = String::new();
+        for value in values {
+            list.push_str(&*value);
+            list.push('\x1F'); // Unit separator
         }
 
-        let mut command = Command::new(executable.clone());
-        command.env_clear();
+        list.pop(); // Remove trailing US
 
-        for (var, val) in env.as_map().iter() {
-            command.env(&*var, &*val);
+        env.set(&*parameter, list);
+    }
+
+    let mut command = Command::new(executable.clone());
+    command.env_clear();
+
+    for (var, val) in env.as_map().iter() {
+        command.env(&*var, &*val);
+    }
+
+    let mut process = match command.spawn() {
+        Ok(process) => process,
+        Err(error) => {
+            out!(Red, format!("gosh: Couldn't execute process: {:?}", error));
+            return 255;
+        },
+    };
+
+    match process.wait().unwrap().code() { // TODO: returns None on signal death. Use unix extensions to elaborate.
+        Some(exit_code) => exit_code,
+        None => {
+            out!(Red, "gosh: Process killed by signal.\n{} ");
+            255
         }
-
-        let mut process = match command.spawn() {
-            Ok(process) => process,
-            Err(error) => {
-                out!(Red, format!("gosh: Couldn't execute process: {:?}", error));
-                return Some(executable);
-            },
-        };
-
-        match process.wait().unwrap().code() { // TODO: returns None on signal death. Use unix extensions to elaborate.
-            Some(exit_code) => out!(Green, format!("gosh: Process exited with {}\n", exit_code)),
-            None => out!(Red, "gosh: Process killed by signal.\n"),
-        }
-
-        Some(executable)
-
-    }).or_else(|| { out!(Red, "gosh: Couldn't find that program, sorry!\n"); None });
+    }
 }
 
