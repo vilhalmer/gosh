@@ -12,6 +12,7 @@ use ansi_term::Colour::*;
 mod parser;
 mod environment;
 mod filesystem;
+mod builtins;
 
 use parser::Stanza;
 use environment::Environment;
@@ -39,7 +40,7 @@ fn main() {
 
         if path.is_relative() {
             path = env::current_dir().unwrap().join(&path) // If we can't read the current directory, might as well crash sooner rather than later.
-        }
+        };
 
         path.to_str().map(|p| p.to_string())
 
@@ -62,7 +63,7 @@ fn main() {
             Ok(stanza) => stanza,
         };
 
-        if debug { out!(Black.bold(), format!("{:?}\n", stanza)); }
+        if debug { out!(Black.bold(), format!("{:?}\n", stanza)); };
 
         match exec(stanza, &root_env) {
             0 => out!(Green, format!(" :) ")),
@@ -74,14 +75,6 @@ fn main() {
 fn exec(stanza: Stanza, env: &Environment) -> i32 {
     let mut env = Environment::with_parent(env);
 
-    let executable = match resolve(stanza.executable(), &env) {
-        Some(e) => e,
-        None => {
-            out!(Red, "gosh: Couldn't find that program, sorry!\n");
-            return 127;
-        }
-    };
-
     for (parameter, values) in stanza.parameters().iter() {
         let mut list = String::new();
         for value in values {
@@ -92,14 +85,26 @@ fn exec(stanza: Stanza, env: &Environment) -> i32 {
         list.pop(); // Remove trailing US
 
         env.set(&*parameter, list);
-    }
+    };
+
+    if let Some(function) = builtins::look_up(stanza.executable()) {
+        return function(&env);
+    };
+
+    let executable = match resolve(stanza.executable(), &env) {
+        Some(e) => e,
+        None => {
+            out!(Red, "gosh: Couldn't find that program, sorry!\n");
+            return 127;
+        }
+    };
 
     let mut command = Command::new(executable.clone());
     command.env_clear();
 
     for (var, val) in env.as_map().iter() {
         command.env(&*var, &*val);
-    }
+    };
 
     let mut process = match command.spawn() {
         Ok(process) => process,

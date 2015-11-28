@@ -44,6 +44,10 @@ impl Environment {
             Some(v) => Some(v),
         }
     }
+    
+    pub fn get_local(&self, variable: &str) -> Option<&String> {
+        self.variables.get(&variable.to_owned())
+    }
 
     pub fn as_map(&self) -> HashMap<String, String> {
         let mut env_map = self.variables.clone();
