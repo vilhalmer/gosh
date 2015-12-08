@@ -106,6 +106,10 @@ fn exec(stanza: Stanza, env: &Environment) -> i32 {
         command.env(&*var, &*val);
     };
 
+    if let Some(flags) = stanza.parameters().get("flags") {
+        command.arg(format!("-{}", flags.join("")));
+    };
+
     let mut process = match command.spawn() {
         Ok(process) => process,
         Err(error) => {
