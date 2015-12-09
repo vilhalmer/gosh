@@ -106,18 +106,16 @@ fn exec(stanza: Stanza, env: &Environment) -> i32 {
         command.env(&*var, &*val);
     };
 
-    if let Some(flags) = stanza.parameters().get("flags") {
-        for flag in flags {
-            command.arg(if flag.len() == 1 {
-                format!("-{}", flag)
-            }
-            else {
-                format!("--{}", flag)
-            });
-        };
+    for flag in stanza.flags() {
+        command.arg(if flag.len() == 1 {
+            format!("-{}", flag)
+        }
+        else {
+            format!("--{}", flag)
+        });
     };
 
-    for (parameter, values) in stanza.parameters().iter().filter(|&(p, _)| p != "flags") {
+    for (parameter, values) in stanza.parameters().iter() {
         for value in values {
             command.arg(if parameter.len() == 1 {
                 format!("-{}", parameter)

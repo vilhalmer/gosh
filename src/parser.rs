@@ -35,6 +35,7 @@ impl fmt::Display for ParserError {
 #[derive(Debug)]
 pub struct Stanza {
     executable: String,
+    flags: Vec<String>,
     parameters: HashMap<String, Vec<String>>,
 }
 
@@ -42,12 +43,17 @@ impl Stanza {
     fn new() -> Stanza {
         Stanza {
             executable: String::new(),
+            flags: Vec::new(),
             parameters: HashMap::new(),
         }
     }
 
     pub fn executable(&self) -> &String {
         &self.executable
+    }
+
+    pub fn flags(&self) -> &Vec<String> {
+        &self.flags
     }
 
     pub fn parameters(&self) -> &HashMap<String, Vec<String>> {
@@ -98,13 +104,30 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     if stanza.executable.is_empty() {
                         stanza.executable = token.trim().to_owned();
                     }
-                    else {
-                        return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
-                    }
                 }
 
                 current_parameter_name = next_bit.trim().to_owned();
                 stanza.parameters.insert(current_parameter_name.clone(), Vec::new());
+
+                next_bit = String::new();
+                token = String::new();
+            },
+
+            ";" => {
+                // A semicolon denotes a flag; that is, a parameter with no associated value.
+
+                if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
+                    // In theory we should allow flags after parameters, but for now I'm just going
+                    // to panic.
+                    return Err(ParserError { kind: SyntaxError, message: format!("All flags must appear before the first parameter.") });
+                }
+                else {
+                    if stanza.executable.is_empty() {
+                        stanza.executable = token.trim().to_owned()
+                    }
+                }
+
+                stanza.flags.push(next_bit.clone());
 
                 next_bit = String::new();
                 token = String::new();
@@ -164,9 +187,6 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                 else {
                     if stanza.executable.is_empty() {
                         stanza.executable = token.trim().to_owned();
-                    }
-                    else {
-                        return Err(ParserError { kind: InternalError, message: format!("Parameter ({}) was never added to map.", current_parameter_name) });
                     }
                 }
 
