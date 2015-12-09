@@ -7,7 +7,9 @@ use environment::Environment;
 extern crate ansi_term;
 use ansi_term::Colour::*;
 
-pub fn look_up(builtin: &str) -> Option<fn(&Environment) -> i32> {
+pub type Builtin = fn(&mut Environment) -> i32;
+
+pub fn look_up(builtin: &str) -> Option<Builtin> {
     match builtin {
         "change directory" | "cd" => Some(cd),
         "exit" => Some(exit),
@@ -16,7 +18,7 @@ pub fn look_up(builtin: &str) -> Option<fn(&Environment) -> i32> {
 }
 
 use std::env;
-pub fn cd(env: &Environment) -> i32 {
+pub fn cd(env: &mut Environment) -> i32 {
     let target = match env.get_local("to") {
         Some(target) => PathBuf::from(target),
         None => {
@@ -39,7 +41,7 @@ pub fn cd(env: &Environment) -> i32 {
     }
 }
 
-pub fn exit(env: &Environment) -> i32 {
+pub fn exit(env: &mut Environment) -> i32 {
     let code = match env.get_local("code") {
         Some(code) => i32::from_str(code).unwrap_or(0),
         None => 0

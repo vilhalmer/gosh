@@ -88,7 +88,7 @@ fn exec(stanza: Stanza, env: &Environment) -> i32 {
     };
 
     if let Some(function) = builtins::look_up(stanza.executable()) {
-        return function(&env);
+        return function(&mut env);
     };
 
     let executable = match resolve(stanza.executable(), &env) {
