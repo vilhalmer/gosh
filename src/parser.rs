@@ -117,9 +117,15 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                 // A semicolon denotes a flag; that is, a parameter with no associated value.
 
                 if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
-                    // In theory we should allow flags after parameters, but for now I'm just going
-                    // to panic.
-                    return Err(ParserError { kind: SyntaxError, message: format!("All flags must appear before the first parameter.") });
+                    // TODO: Tired of all this duplicate code, need to find a way to streamline the
+                    // rules.
+                    if !token.trim().is_empty() {
+                        current_parameter.push(token.trim().to_owned());
+                    }
+
+                    if current_parameter.is_empty() {
+                        return Err(ParserError { kind: SyntaxError, message: format!("{}: ?", &*current_parameter_name) });
+                    }
                 }
                 else {
                     if stanza.executable.is_empty() {
