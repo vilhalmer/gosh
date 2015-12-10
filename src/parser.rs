@@ -133,6 +133,10 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
                 }
 
+                if next_bit.is_empty() {
+                    return Err(ParserError { kind: SyntaxError, message: "Empty flag".to_string() });
+                }
+
                 stanza.flags.push(next_bit.clone());
 
                 next_bit = String::new();
