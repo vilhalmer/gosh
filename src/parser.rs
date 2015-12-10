@@ -129,12 +129,12 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                 }
                 else {
                     if stanza.executable.is_empty() {
-                        stanza.executable = token.trim().to_owned()
+                        stanza.executable = token.trim().to_owned();
                     }
                 }
 
                 if next_bit.is_empty() {
-                    return Err(ParserError { kind: SyntaxError, message: "Empty flag".to_string() });
+                    return Err(ParserError { kind: SyntaxError, message: "Empty flag.".to_string() });
                 }
 
                 stanza.flags.push(next_bit.clone());
