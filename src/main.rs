@@ -106,6 +106,10 @@ fn exec(stanza: Stanza, env: &Environment) -> i32 {
         command.env(&*var, &*val);
     };
 
+    for argument in stanza.arguments() {
+        command.arg(argument);
+    };
+
     for flag in stanza.flags() {
         command.arg(if flag.len() == 1 {
             format!("-{}", flag)

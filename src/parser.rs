@@ -1,6 +1,7 @@
 extern crate unicode_segmentation;
 extern crate unicode_width;
 use self::unicode_segmentation::UnicodeSegmentation;
+use self::unicode_width::UnicodeWidthStr;
 
 use std::collections::HashMap;
 
@@ -35,6 +36,7 @@ impl fmt::Display for ParserError {
 #[derive(Debug)]
 pub struct Stanza {
     executable: String,
+    arguments: Vec<String>,
     flags: Vec<String>,
     parameters: HashMap<String, Vec<String>>,
 }
@@ -43,6 +45,7 @@ impl Stanza {
     fn new() -> Stanza {
         Stanza {
             executable: String::new(),
+            arguments: Vec::new(),
             flags: Vec::new(),
             parameters: HashMap::new(),
         }
@@ -50,6 +53,10 @@ impl Stanza {
 
     pub fn executable(&self) -> &String {
         &self.executable
+    }
+
+    pub fn arguments(&self) -> &Vec<String> {
+        &self.arguments
     }
 
     pub fn flags(&self) -> &Vec<String> {
@@ -101,8 +108,13 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
                 }
                 else {
-                    if stanza.executable.is_empty() {
-                        stanza.executable = token.trim().to_owned();
+                    if !token.trim().is_empty() {
+                        if stanza.executable.is_empty() {
+                            stanza.executable = token.trim().to_owned();
+                        }
+                        else {
+                            stanza.arguments.push(token.trim().to_owned());
+                        }
                     }
                 }
 
@@ -128,8 +140,13 @@ pub fn parse(stanza_text: &str) -> ParserResult {
                     }
                 }
                 else {
-                    if stanza.executable.is_empty() {
-                        stanza.executable = token.trim().to_owned();
+                    if !token.trim().is_empty() {
+                        if stanza.executable.is_empty() {
+                            stanza.executable = token.trim().to_owned();
+                        }
+                        else {
+                            stanza.arguments.push(token.trim().to_owned());
+                        }
                     }
                 }
 
@@ -145,20 +162,28 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
             "," => {
                 // A comma indicates that we've moved on to the next item in a list.
+                // A list outside a parameter indicates bare arguments to the executable.
 
                 token.push_str(&*next_bit);
+                let clean_token = token.trim().to_owned();
+
+                if clean_token.is_empty() {
+                    return Err(ParserError { kind: SyntaxError, message: format!("{}: list is missing first item.", &*current_parameter_name) });
+                }
 
                 if let Some(current_parameter) = stanza.parameters.get_mut(&current_parameter_name) {
-                    if !token.trim().is_empty() {
-                        current_parameter.push(token.trim().to_owned());
-                    }
-
-                    if current_parameter.is_empty() {
-                        return Err(ParserError { kind: SyntaxError, message: format!("{}: list is missing first item.", &*current_parameter_name) });
-                    }
+                    current_parameter.push(clean_token);
                 }
                 else {
-                    return Err(ParserError { kind: SyntaxError, message: format!("Lists are not allowed outside of parameters.") });
+                    if !token.trim().is_empty() {
+                        if stanza.executable.is_empty() {
+                            stanza.executable = clean_token;
+                        }
+                        else {
+                            stanza.arguments.push(clean_token);
+                        }
+                    }
+                    //return Err(ParserError { kind: SyntaxError, message: format!("Lists are not allowed outside of parameters.") });
                 }
 
                 token = String::new();
@@ -171,14 +196,21 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
                 next_bit.push_str(bit);
             },
-/*
-            _ if UnicodeWidthStr::width(bit) == 1 => {
+
+            _ if UnicodeWidthStr::width(bit) == 1 && !bit.chars().last().unwrap_or('\0').is_alphanumeric() => {
                 // Other single-character bits need to be glommed back on to the thing they used to
                 // be next to as well.
 
                 next_bit.push_str(bit);
             },
-*/
+
+            // TODO: This needs to cover other characters, but this will have to do for now.
+            _ if next_bit.chars().last().unwrap_or('\0') == '-' => {
+                // If the last thing we looked at was a combining character, this goes too.
+
+                next_bit.push_str(bit);
+            },
+
             "\n" => {
                 // End of stanza. Probably.
 
@@ -195,8 +227,13 @@ pub fn parse(stanza_text: &str) -> ParserResult {
 
                 }
                 else {
-                    if stanza.executable.is_empty() {
-                        stanza.executable = token.trim().to_owned();
+                    if !token.trim().is_empty() {
+                        if stanza.executable.is_empty() {
+                            stanza.executable = token.trim().to_owned();
+                        }
+                        else {
+                            stanza.arguments.push(token.trim().to_owned());
+                        }
                     }
                 }
 
