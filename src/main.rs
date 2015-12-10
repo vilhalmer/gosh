@@ -56,7 +56,7 @@ fn main() {
 
         let stanza = match parser::parse(&stanza) {
             Err(error) => {
-                out!(Red, format!("{}\n", error));
+                out!(Red, format!("{}\n :( ", error));
                 continue;
             },
 
