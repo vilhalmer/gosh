@@ -10,7 +10,7 @@
 	1. Run `cargo build` in <path-to-repo>/progs/ferris
 	2. Run `export PATH=$PATH:<path-to-repo>/progs/ferris/target/debug`
 	3. Run `cargo run` in <path-to-repo>
-	4. Now you are running gosh with ferris accessable via the path environment variable!
+	4. Now you are running gosh with ferris accessible via the path environment variable!
 	5. Run `ferris <parameters>`
 	6. PROFIT
 	
