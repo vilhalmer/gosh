@@ -1,0 +1,8 @@
+[package]
+name = "ferris"
+version = "0.1.0"
+authors = ["Stephen J. Radachy <sjradach@mtu.edu>"]
+
+[dependencies]
+tiny_http = "0.5.1"
+ascii = "0.5.4"
